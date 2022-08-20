@@ -1,4 +1,6 @@
 # consistent
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2FKeisukeYamashita%2Fconsistent.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2FKeisukeYamashita%2Fconsistent?ref=badge_shield)
+
 
 > Go written consistent hashing package inspired by Google's "Consistent Hashing with Bounded Loads"
 
@@ -53,6 +55,9 @@ All contributions are welcome, please file a issue or a pull request 🚀
 ## License
 
 [Apache License 2.0](./LICENSE).
+
+
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2FKeisukeYamashita%2Fconsistent.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2FKeisukeYamashita%2Fconsistent?ref=badge_large)
 
 ## Acknowledgements
 
