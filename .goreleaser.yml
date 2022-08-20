@@ -1,0 +1,20 @@
+builds:
+  - skip: true
+changelog:
+  skip: false
+  groups:
+    - title: Features ✨
+      regexp: "^.*feat[(\\w)]*:+.*$"
+      order: 0
+    - title: Doc 📚
+      regexp: "^.*docs[(\\w)]*:+.*$"
+      order: 1
+    - title: Bug Fixes 🐛
+      regexp: "^.*fix[(\\w)]*:+.*$"
+      order: 2
+    - title: Others 🎐
+      order: 999
+release:
+  github:
+    owner: KeisukeYamashita
+    name: consistent
