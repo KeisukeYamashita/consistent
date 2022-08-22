@@ -64,6 +64,7 @@ type Consistent struct {
 func New(cfg *Config, bins []Bin) (*Consistent, error) {
 	c := &Consistent{
 		hasher:                 cfg.Hasher,
+		balls:                  map[PartitionID]Ball{},
 		bins:                   make(map[string]*Bin),
 		loadBalancingParameter: cfg.LoadBalancingParameter,
 		partition:              uint64(cfg.Partition),
@@ -92,7 +93,11 @@ func (c *Consistent) Add(bin Bin) error {
 	}
 
 	c.add(bin)
-	return c.distributePartitions()
+	if err := c.distributePartitions(); err != nil {
+		return err
+	}
+	c.relocate()
+	return nil
 }
 
 // add replicates the bin by replication factor and stores to the ring.
@@ -118,6 +123,30 @@ func (c *Consistent) delSlice(val uint64) {
 			break
 		}
 	}
+}
+
+// Delete removes a ball from the ring.
+func (c *Consistent) Delete(ball Ball) error {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	var exist bool
+	newBalls := map[PartitionID]Ball{}
+	for partID, b := range c.balls {
+		if b.String() == ball.String() {
+			exist = true
+			continue
+		}
+
+		newBalls[partID] = b
+	}
+
+	if !exist {
+		return ErrBallNotFound
+	}
+
+	c.balls = newBalls
+	return nil
 }
 
 // distributePartitions calculates the partitions and each loads of the bin.
@@ -259,12 +288,10 @@ func (c *Consistent) LoadDistribution() map[string]float64 {
 
 // Locate finds a home for given ball
 func (c *Consistent) Locate(ball Ball) *Bin {
-	partID := c.FindPartitionID(ball)
-
 	c.mu.Lock()
-	c.mu.Unlock()
-
+	partID := c.FindPartitionID(ball)
 	c.balls[partID] = ball
+	c.mu.Unlock()
 	return c.GetPartitionOwner(partID)
 }
 
@@ -272,6 +299,20 @@ func (c *Consistent) Locate(ball Ball) *Bin {
 func (c *Consistent) MaximumLoad() float64 {
 	load := float64(float64(c.partition)/float64(len(c.bins))) * c.loadBalancingParameter
 	return math.Ceil(load)
+}
+
+// relocate redistributes the balls to the current existing bins
+func (c *Consistent) relocate() {
+	newBalls := map[PartitionID][]Ball{}
+	for _, ball := range c.balls {
+		partID := c.FindPartitionID(ball)
+		if len(newBalls[partID]) == 0 {
+			newBalls[partID] = []Ball{ball}
+			continue
+		}
+
+		newBalls[partID] = append(newBalls[partID], ball)
+	}
 }
 
 // Remove removes a bin from the consistent hash ring.
