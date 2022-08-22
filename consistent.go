@@ -6,6 +6,8 @@ import (
 	"math"
 	"sort"
 	"sync"
+
+	"github.com/go-playground/validator/v10"
 )
 
 // PartitionID represents the ID of the partition.
@@ -20,16 +22,16 @@ type Config struct {
 	// Partitions are used to divide the ring and assign bin and ball.
 	// Balls are distributed among partitions. Prime numbers are good to
 	// distribute keys uniformly. Select a big number if you have too many keys.
-	Partition int
+	Partition uint64 `validate:"required,min=1,max=18446744073709551614"`
 
 	// Bins are replicated on consistent hash ring.
 	// It's known as virtual nodes to uniform the distribution.
-	ReplicationFactor int
+	ReplicationFactor int `validate:"required,min=1"`
 
 	// LoadBalancingParameter is used to calculate average load.
 	// According to the Google paper, one or more bins will be adjusted so that they do not exceed a specific load.
 	// The maximum number of partitions are calculated by LoadBalancingParameter * (number of balls/number of bins).
-	LoadBalancingParameter float64
+	LoadBalancingParameter float64 `validate:"required,gt=0"`
 }
 
 // Consistent represents the consistent hashing ring.
@@ -62,6 +64,12 @@ type Consistent struct {
 
 // New generates a new Consistent by passed config.
 func New(cfg *Config, bins []Bin) (*Consistent, error) {
+	v := validator.New()
+
+	if err := v.Struct(cfg); err != nil {
+		return nil, err
+	}
+
 	c := &Consistent{
 		hasher:                 cfg.Hasher,
 		balls:                  map[PartitionID]Ball{},
