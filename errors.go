@@ -6,6 +6,9 @@ var (
 	//ErrInsufficientBins represents an error which means there are not enough bins to complete the task.
 	ErrInsufficientBins = errors.New("insufficient bins")
 
+	// ErrBallNotFound represents an error which means requested ball could not be found in consistent hash ring.
+	ErrBallNotFound = errors.New("ball not found")
+
 	// ErrBinNotFound represents an error which means requested bin could not be found in consistent hash ring.
 	ErrBinNotFound = errors.New("bin not found")
 
