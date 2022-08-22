@@ -59,6 +59,115 @@ func initialBins(cnt int) []Bin {
 	return bins
 }
 
+func TestNew(t *testing.T) {
+	type testcase struct {
+		cfg  *Config
+		pass bool
+	}
+
+	tcs := map[string]testcase{
+		"ok": {
+			cfg: &Config{
+				Hasher:                 hasher{},
+				Partition:              100,
+				ReplicationFactor:      10,
+				LoadBalancingParameter: 1.20,
+			},
+			pass: true,
+		},
+		"0 partition": {
+			cfg: &Config{
+				Hasher:                 hasher{},
+				Partition:              0,
+				ReplicationFactor:      10,
+				LoadBalancingParameter: 1.20,
+			},
+			pass: false,
+		},
+		"no partition": {
+			cfg: &Config{
+				Hasher:                 hasher{},
+				ReplicationFactor:      10,
+				LoadBalancingParameter: 1.20,
+			},
+			pass: false,
+		},
+		"negative replication factor": {
+			cfg: &Config{
+				Hasher:                 hasher{},
+				Partition:              20,
+				ReplicationFactor:      -1,
+				LoadBalancingParameter: 1.20,
+			},
+			pass: false,
+		},
+		"zero replication factor": {
+			cfg: &Config{
+				Hasher:                 hasher{},
+				Partition:              20,
+				ReplicationFactor:      -1,
+				LoadBalancingParameter: 1.20,
+			},
+			pass: false,
+		},
+		"no replication factor": {
+			cfg: &Config{
+				Hasher:                 hasher{},
+				Partition:              20,
+				LoadBalancingParameter: 1.20,
+			},
+			pass: false,
+		},
+		"negative load balancing parameter": {
+			cfg: &Config{
+				Hasher:                 hasher{},
+				Partition:              20,
+				ReplicationFactor:      10,
+				LoadBalancingParameter: -1,
+			},
+			pass: false,
+		},
+		"0 load balancing parameter": {
+			cfg: &Config{
+				Hasher:                 hasher{},
+				Partition:              20,
+				ReplicationFactor:      10,
+				LoadBalancingParameter: 0,
+			},
+			pass: false,
+		},
+		"no load balancing parameter": {
+			cfg: &Config{
+				Hasher:            hasher{},
+				Partition:         20,
+				ReplicationFactor: 10,
+			},
+			pass: false,
+		},
+	}
+
+	for n, tc := range tcs {
+		t.Run(n, func(t *testing.T) {
+			tc := tc
+			t.Parallel()
+
+			_, err := New(tc.cfg, nil)
+			if err != nil {
+				if tc.pass {
+					t.Fatalf("should fail: %v", err)
+				}
+
+				return
+			}
+
+			if !tc.pass {
+				t.Fatal("should not pass")
+			}
+		})
+	}
+
+}
+
 func TestConsistent_Add(t *testing.T) {
 	type testcase struct {
 		bins     []Bin
@@ -293,7 +402,7 @@ func TestConsistent_GetBins(t *testing.T) {
 func TestConsistent_MaximumLoad(t *testing.T) {
 	type testcase struct {
 		bins       []Bin
-		partitions int
+		partitions uint64
 		expected   float64
 	}
 
