@@ -273,6 +273,41 @@ func TestConsistent_Delete(t *testing.T) {
 
 func TestConsistent_GetBalls(t *testing.T) {
 	type testcase struct {
+		balls []Ball
+	}
+
+	tcs := map[string]testcase{
+		"add balls": {
+			balls: initialBalls(4),
+		},
+	}
+
+	cfg := newConfig()
+	for n, tc := range tcs {
+		t.Run(n, func(t *testing.T) {
+			tc := tc
+			t.Parallel()
+
+			c := new(t, cfg)
+			for _, bin := range initialBins(6) {
+				if err := c.Add(bin); err != nil {
+					t.Fatalf("error bin (name: %s) add: %v", bin.String(), err)
+				}
+			}
+
+			for _, ball := range tc.balls {
+				_ = c.Locate(ball)
+			}
+
+			if cnt := len(c.GetBalls()); cnt != len(tc.balls) {
+				t.Fatalf("ball count mismatch, got:%d want:%d", cnt, len(tc.balls))
+			}
+		})
+	}
+}
+
+func TestConsistent_GetBallsByBin(t *testing.T) {
+	type testcase struct {
 		bins []Bin
 		bin  Bin
 		want error
@@ -305,7 +340,7 @@ func TestConsistent_GetBalls(t *testing.T) {
 				}
 			}
 
-			_, err := c.GetBalls(tc.bin)
+			_, err := c.GetBallsByBin(tc.bin)
 			if err != nil {
 				if !errors.Is(err, tc.want) {
 					t.Fatalf("error not expected, got:%v want:%v", err, tc.want)
