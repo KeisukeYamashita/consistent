@@ -73,7 +73,7 @@ Thank you very much for open sourcing these hard work.
 [dependabot icon]: https://img.shields.io/badge/-Dependabot-025E8C?style=flat-square&logo=dependabot&logoColor=white
 [dependabot]: https://github.com/KeisukeYamashita/consistent/security/dependabot
 [godoc icon]: https://img.shields.io/badge/-Go-00ADD8?style=flat-square&logo=go&logoColor=white
-[godoc]: https://pkg.go.dev/github.com/KeisukeYamasihta/consistent
+[godoc]: https://pkg.go.dev/github.com/KeisukeYamashita/consistent
 [snyk icon]: https://img.shields.io/badge/-Snyk-4C4A73?style=flat-square&logo=snyk&logoColor=white
 [snyk]: https://snyk.io/test/github/KeisukeYamashitaa/consistent/badge.svg
 [fossa icon]: https://app.fossa.com/api/projects/git%2Bgithub.com%2FKeisukeYamashita%2Fconsistent.svg?type=small
