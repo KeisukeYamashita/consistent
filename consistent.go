@@ -297,7 +297,7 @@ func (c *Consistent) LoadDistribution() map[string]float64 {
 // Locate finds a home for given ball
 func (c *Consistent) Locate(ball Ball) *Bin {
 	c.mu.Lock()
-	partID := c.FindPartitionID(ball)
+	partID := c.FindPartitionID([]byte(ball.String()))
 	c.balls[partID] = ball
 	c.mu.Unlock()
 	return c.GetPartitionOwner(partID)
@@ -313,7 +313,7 @@ func (c *Consistent) MaximumLoad() float64 {
 func (c *Consistent) relocate() {
 	newBalls := map[PartitionID][]Ball{}
 	for _, ball := range c.balls {
-		partID := c.FindPartitionID(ball)
+		partID := c.FindPartitionID([]byte(ball.String()))
 		if len(newBalls[partID]) == 0 {
 			newBalls[partID] = []Ball{ball}
 			continue

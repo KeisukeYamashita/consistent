@@ -43,10 +43,16 @@ func (hs hasher) Sum64(data []byte) uint64 {
 	return h.Sum64()
 }
 
+type ball []byte
+
+func (b ball) String() string {
+	return string(b)
+}
+
 func initialBalls(cnt int) []Ball {
 	balls := make([]Ball, cnt)
 	for i := 0; i < cnt; i++ {
-		balls[i] = Ball([]byte(fmt.Sprintf("%s%d", ballPrefix, i)))
+		balls[i] = ball([]byte(fmt.Sprintf("%s%d", ballPrefix, i)))
 	}
 	return balls
 }
@@ -220,7 +226,7 @@ func TestConsistent_Delete(t *testing.T) {
 			expected: 3,
 		},
 		"fail on non existing ball": {
-			ball: Ball([]byte("not exist")),
+			ball: ball([]byte("not exist")),
 			want: ErrBallNotFound,
 		},
 	}
