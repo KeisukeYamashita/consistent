@@ -215,23 +215,28 @@ func (c *Consistent) FindPartitionID(key []byte) PartitionID {
 	return PartitionID(hkey % c.partition)
 }
 
-// GetBin returns a thread-safe copy of bins.
-func (c *Consistent) GetBin(name string) (*Bin, error) {
+// GetBalls returns all balls in the bin
+func (c *Consistent) GetBalls() []Ball {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 
-	bin, exist := c.bins[name]
-	if exist {
-		// create a thread-safe copy of bin list.
-		bin2 := *bin
-		return &bin2, nil
+	balls := []Ball{}
+	mapping := map[string]Ball{}
+	for _, ball := range c.balls {
+		_, exist := mapping[ball.String()]
+		if exist {
+			continue
+		}
+
+		balls = append(balls, ball)
+		mapping[ball.String()] = ball
 	}
 
-	return nil, ErrBinNotFound
+	return balls
 }
 
-// GetBalls returns the balls associated with the Bin
-func (c *Consistent) GetBalls(bin Bin) ([]Ball, error) {
+// GetBallsByBin returns the balls associated with the Bin
+func (c *Consistent) GetBallsByBin(bin Bin) ([]Ball, error) {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 
@@ -251,6 +256,21 @@ func (c *Consistent) GetBalls(bin Bin) ([]Ball, error) {
 	}
 
 	return res, nil
+}
+
+// GetBin returns a thread-safe copy of bins.
+func (c *Consistent) GetBin(name string) (*Bin, error) {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+
+	bin, exist := c.bins[name]
+	if exist {
+		// create a thread-safe copy of bin list.
+		bin2 := *bin
+		return &bin2, nil
+	}
+
+	return nil, ErrBinNotFound
 }
 
 // GetBins returns a thread-safe copy of bins.
