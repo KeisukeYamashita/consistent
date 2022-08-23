@@ -214,7 +214,6 @@ func TestConsistent_Delete(t *testing.T) {
 	type testcase struct {
 		ball     Ball
 		expected int
-		relocate bool
 		want     error
 	}
 
