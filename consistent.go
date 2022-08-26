@@ -1,6 +1,5 @@
 /*
-
-*/
+ */
 package consistent
 
 import (
@@ -53,7 +52,7 @@ type Consistent struct {
 	bins map[string]*Bin
 
 	// balls maps the partition and the ball
-	balls map[PartitionID]Ball
+	balls map[PartitionID][]Ball
 
 	// partitions is a mapping partition ID to a bin.
 	partitions map[PartitionID]*Bin
@@ -75,7 +74,7 @@ func New(cfg *Config, bins []Bin) (*Consistent, error) {
 
 	c := &Consistent{
 		hasher:                 cfg.Hasher,
-		balls:                  map[PartitionID]Ball{},
+		balls:                  map[PartitionID][]Ball{},
 		bins:                   make(map[string]*Bin),
 		loadBalancingParameter: cfg.LoadBalancingParameter,
 		partition:              uint64(cfg.Partition),
@@ -141,22 +140,22 @@ func (c *Consistent) Delete(ball Ball) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
+	partID := c.FindPartitionID([]byte(ball.String()))
+	filteredBalls := []Ball{}
 	var exist bool
-	newBalls := map[PartitionID]Ball{}
-	for partID, b := range c.balls {
+	for _, b := range c.balls[partID] {
 		if b.String() == ball.String() {
 			exist = true
 			continue
 		}
 
-		newBalls[partID] = b
+		filteredBalls = append(filteredBalls, b)
 	}
-
 	if !exist {
 		return ErrBallNotFound
 	}
 
-	c.balls = newBalls
+	c.balls[partID] = filteredBalls
 	return nil
 }
 
@@ -224,15 +223,8 @@ func (c *Consistent) GetBalls() []Ball {
 	defer c.mu.RUnlock()
 
 	balls := []Ball{}
-	mapping := map[string]Ball{}
-	for _, ball := range c.balls {
-		_, exist := mapping[ball.String()]
-		if exist {
-			continue
-		}
-
-		balls = append(balls, ball)
-		mapping[ball.String()] = ball
+	for _, bs := range c.balls {
+		balls = append(balls, bs...)
 	}
 
 	return balls
@@ -255,7 +247,7 @@ func (c *Consistent) GetBallsByBin(bin Bin) ([]Ball, error) {
 			continue
 		}
 
-		res = append(res, balls)
+		res = append(res, balls...)
 	}
 
 	return res, nil
@@ -321,7 +313,7 @@ func (c *Consistent) LoadDistribution() map[string]float64 {
 func (c *Consistent) Locate(ball Ball) *Bin {
 	c.mu.Lock()
 	partID := c.FindPartitionID([]byte(ball.String()))
-	c.balls[partID] = ball
+	c.balls[partID] = append(c.balls[partID], ball)
 	c.mu.Unlock()
 	return c.GetPartitionOwner(partID)
 }
@@ -335,15 +327,18 @@ func (c *Consistent) MaximumLoad() float64 {
 // relocate redistributes the balls to the current existing bins
 func (c *Consistent) relocate() {
 	newBalls := map[PartitionID][]Ball{}
-	for _, ball := range c.balls {
-		partID := c.FindPartitionID([]byte(ball.String()))
-		if len(newBalls[partID]) == 0 {
-			newBalls[partID] = []Ball{ball}
-			continue
-		}
+	for _, balls := range c.balls {
+		for _, ball := range balls {
+			partID := c.FindPartitionID([]byte(ball.String()))
+			if len(newBalls[partID]) == 0 {
+				newBalls[partID] = []Ball{ball}
+				continue
+			}
 
-		newBalls[partID] = append(newBalls[partID], ball)
+			newBalls[partID] = append(newBalls[partID], ball)
+		}
 	}
+	c.balls = newBalls
 }
 
 // Remove removes a bin from the consistent hash ring.

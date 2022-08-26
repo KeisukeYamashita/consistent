@@ -247,9 +247,9 @@ func TestConsistent_Delete(t *testing.T) {
 				c.Locate(ball)
 			}
 
-			oldBalls := map[PartitionID]Ball{}
-			for partID, ball := range c.balls {
-				oldBalls[partID] = ball
+			oldBalls := map[PartitionID][]Ball{}
+			for partID, balls := range c.balls {
+				oldBalls[partID] = append(oldBalls[partID], balls...)
 			}
 
 			if err := c.Delete(tc.ball); err != nil {
@@ -264,8 +264,8 @@ func TestConsistent_Delete(t *testing.T) {
 				t.Fatalf("should fail got:%v", tc.want)
 			}
 
-			if len(c.balls) != tc.expected {
-				t.Fatalf("unexpected result: got:%d want:%d", len(c.balls), tc.expected)
+			if len(c.GetBalls()) != tc.expected {
+				t.Fatalf("unexpected result: got:%d want:%d", len(c.GetBalls()), tc.expected)
 			}
 		})
 	}
@@ -549,9 +549,9 @@ func TestConsistent_Relocate(t *testing.T) {
 				c.Locate(ball)
 			}
 
-			oldBalls := map[PartitionID]Ball{}
-			for partID, ball := range c.balls {
-				oldBalls[partID] = ball
+			oldBalls := map[PartitionID][]Ball{}
+			for partID, balls := range c.balls {
+				oldBalls[partID] = append(oldBalls[partID], balls...)
 			}
 
 			if err := tc.f(c); err != nil {
