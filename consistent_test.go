@@ -617,3 +617,196 @@ func TestConsistent_Remove(t *testing.T) {
 		})
 	}
 }
+
+func BenchmarkConsistent_FindPartitionID(b *testing.B) {
+	cfg := newConfig()
+	c, err := New(cfg, nil)
+	if err != nil {
+		b.Errorf("failed: %v", err)
+	}
+
+	for _, bin := range initialBins(100) {
+		c.Add(bin)
+	}
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		c.FindPartitionID(ball([]byte(fmt.Sprintf("%s%d", ballPrefix, i))))
+	}
+}
+
+func BenchmarkConsistent_LoadDistribution(b *testing.B) {
+	cfg := newConfig()
+	c, err := New(cfg, nil)
+	if err != nil {
+		b.Errorf("failed: %v", err)
+	}
+
+	for _, bin := range initialBins(100) {
+		c.Add(bin)
+	}
+
+	for i := 0; i < 100; i++ {
+		c.Locate(ball([]byte(fmt.Sprintf("%s%d", ballPrefix, i))))
+	}
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		_ = c.LoadDistribution()
+	}
+}
+
+func BenchmarkConsistent_Locate(b *testing.B) {
+	cfg := newConfig()
+	c, err := New(cfg, nil)
+	if err != nil {
+		b.Errorf("failed: %v", err)
+	}
+
+	for _, bin := range initialBins(100) {
+		c.Add(bin)
+	}
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		c.Locate(ball([]byte(fmt.Sprintf("%s%d", ballPrefix, i))))
+	}
+}
+
+func BenchmarkConsistent_GetBalls(b *testing.B) {
+	cfg := newConfig()
+	c, err := New(cfg, nil)
+	if err != nil {
+		b.Errorf("failed: %v", err)
+	}
+
+	for _, bin := range initialBins(100) {
+		c.Add(bin)
+	}
+
+	for i := 0; i < 100; i++ {
+		c.Locate(ball([]byte(fmt.Sprintf("%s%d", ballPrefix, i))))
+	}
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		_ = c.GetBalls()
+	}
+}
+
+func BenchmarkConsistent_GetBallsByBin(b *testing.B) {
+	cfg := newConfig()
+	c, err := New(cfg, nil)
+	if err != nil {
+		b.Errorf("failed: %v", err)
+	}
+
+	bins := initialBins(100)
+	for _, bin := range bins {
+		c.Add(bin)
+	}
+
+	for i := 0; i < 100; i++ {
+		c.Locate(ball([]byte(fmt.Sprintf("%s%d", ballPrefix, i))))
+	}
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		c.GetBallsByBin(bins[0])
+	}
+}
+
+func BenchmarkConsistent_GetBin(b *testing.B) {
+	cfg := newConfig()
+	c, err := New(cfg, nil)
+	if err != nil {
+		b.Errorf("failed: %v", err)
+	}
+
+	bins := initialBins(100)
+	for _, bin := range bins {
+		c.Add(bin)
+	}
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		c.GetBin(bins[0].String())
+	}
+}
+
+func BenchmarkConsistent_GetBins(b *testing.B) {
+	cfg := newConfig()
+	c, err := New(cfg, nil)
+	if err != nil {
+		b.Errorf("failed: %v", err)
+	}
+
+	for _, bin := range initialBins(100) {
+		c.Add(bin)
+	}
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		_ = c.GetBins()
+	}
+}
+
+func BenchmarkConsistent_GetPartitionOwner(b *testing.B) {
+	cfg := newConfig()
+	c, err := New(cfg, nil)
+	if err != nil {
+		b.Errorf("failed: %v", err)
+	}
+
+	for _, bin := range initialBins(100) {
+		c.Add(bin)
+	}
+
+	for i := 0; i < 100; i++ {
+		c.Locate(ball([]byte(ballPrefix)))
+	}
+
+	b.ResetTimer()
+	partID := c.FindPartitionID(ball([]byte(ballPrefix)))
+	for i := 0; i < b.N; i++ {
+		c.GetPartitionOwner(partID)
+	}
+}
+
+func BenchmarkConsistent_MaximumLoad(b *testing.B) {
+	cfg := newConfig()
+	c, err := New(cfg, nil)
+	if err != nil {
+		b.Errorf("failed: %v", err)
+	}
+
+	for _, bin := range initialBins(100) {
+		c.Add(bin)
+	}
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		_ = c.MaximumLoad()
+	}
+}
+
+func BenchmarkConsistent_Relocate(b *testing.B) {
+	cfg := newConfig()
+	c, err := New(cfg, nil)
+	if err != nil {
+		b.Errorf("failed: %v", err)
+	}
+
+	for _, bin := range initialBins(100) {
+		c.Add(bin)
+	}
+
+	for i := 0; i < 100; i++ {
+		c.Locate(ball([]byte(fmt.Sprintf("%s%d", ballPrefix, i))))
+	}
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		c.relocate()
+	}
+}
